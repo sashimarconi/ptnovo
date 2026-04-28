@@ -20,6 +20,20 @@
       ttq.page();
       ttq.track('Purchase',{value:20.19,currency:'EUR'});
     }(window, document, 'ttq');
+    const upsellNext = {
+      ups1: '/ups1/',
+      ups2: '/ups2/',
+      ups3: '/ups3/',
+      ups4: '/ups4/',
+    };
+    const successParams = new URLSearchParams(location.search);
+    const nextStep = successParams.get('next');
+    const redirectPath = upsellNext[nextStep];
+    if (redirectPath) {
+      setTimeout(() => {
+        window.location.href = redirectPath + location.search;
+      }, 2800);
+    }
   </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">

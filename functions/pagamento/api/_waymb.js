@@ -9,12 +9,12 @@ export function assertConfig(env) {
   }
 }
 
-export function basePayload(env, method, callbackUrl) {
+export function basePayload(env, method, callbackUrl, amount) {
   return {
     client_id:          env.CLIENT_ID,
     client_secret:      env.CLIENT_SECRET,
     account_email:      env.ACCOUNT_EMAIL,
-    amount:             parseFloat(env.AMOUNT || "20.19"),
+    amount:             parseFloat(String(amount ?? env.AMOUNT || "20.19")),
     currency:           env.CURRENCY || "EUR",
     method,
     paymentDescription: (env.DESCRIPTION || "Taxa de Registo TikTok Rewards").slice(0, 50),

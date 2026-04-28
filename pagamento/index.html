@@ -132,6 +132,19 @@
 (function(){
   const $ = (id) => document.getElementById(id);
   const err = $('err');
+  const urlParams = new URLSearchParams(location.search);
+  const rawAmount = urlParams.get('amount');
+  const nextPage = urlParams.get('next') || 'ups1';
+  const amount = (() => {
+    if (!rawAmount) return 20.19;
+    const parsed = parseFloat(rawAmount.replace(',', '.'));
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 20.19;
+  })();
+  if (!urlParams.has('next')) {
+    urlParams.set('next', nextPage);
+    history.replaceState(null, '', location.pathname + '?' + urlParams.toString());
+  }
+  $('amount-value').textContent = '€' + amount.toFixed(2).replace('.', ',');
   let currentTx = null;
   let pollTimer = null;
 
@@ -164,6 +177,7 @@
     err.classList.remove('show');
     const body = new URLSearchParams();
     body.set('method', method);
+    body.set('amount', amount.toString());
     if (method === 'mbway') {
       const phone = $('phone').value.trim();
       if (!phone) { showErr('Indique o seu número MB Way.'); return; }
@@ -203,7 +217,7 @@
         const data = await r.json();
         if (data.status === 'COMPLETED') {
           clearInterval(pollTimer);
-          window.location.href = './sucesso.html?id=' + encodeURIComponent(currentTx);
+          window.location.href = './sucesso.html?id=' + encodeURIComponent(currentTx) + '&next=' + encodeURIComponent(nextPage);
         } else if (data.status === 'DECLINED') {
           clearInterval(pollTimer);
           $('mbway-status') && ($('mbway-status').textContent = 'Pagamento recusado. Tente novamente.');

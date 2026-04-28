@@ -4,17 +4,19 @@
 import { assertConfig, basePayload, callbackUrlFor, jsonResponse, waymbRequest } from "./_waymb.js";
 
 export async function onRequestPost({ request, env }) {
-  let method, phone;
+  let method, phone, amount;
   try {
     const ct = request.headers.get("content-type") || "";
     if (ct.includes("application/json")) {
       const body = await request.json();
       method = body.method;
       phone  = (body.phone ?? "").toString().trim();
+      amount = (body.amount ?? "").toString().trim();
     } else {
       const form = await request.formData();
       method = form.get("method");
       phone  = (form.get("phone") ?? "").toString().trim();
+      amount = (form.get("amount") ?? "").toString().trim();
     }
   } catch {
     return jsonResponse({ error: "Pedido inválido." }, 400);
@@ -27,9 +29,19 @@ export async function onRequestPost({ request, env }) {
     return jsonResponse({ error: "Indique o seu número de telemóvel MB Way." }, 400);
   }
 
+  if (amount) {
+    const parsedAmount = parseFloat(amount.replace(",", "."));
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      return jsonResponse({ error: "Valor de pagamento inválido." }, 400);
+    }
+    amount = parsedAmount;
+  } else {
+    amount = null;
+  }
+
   try {
     assertConfig(env);
-    const payload = basePayload(env, method, callbackUrlFor(env));
+    const payload = basePayload(env, method, callbackUrlFor(env), amount);
     if (method === "mbway") payload.payer.phone = phone;
 
     const response = await waymbRequest("/transactions/create", payload);
