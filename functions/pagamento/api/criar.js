@@ -2,6 +2,33 @@
 // Body: form-encoded ou JSON com { method: 'mbway'|'multibanco', phone?: string }
 
 import { assertConfig, basePayload, callbackUrlFor, jsonResponse, waymbRequest } from "./_waymb.js";
+import { sendUtmifyOrder, formatUtcDate } from "./_utmify.js";
+
+function mapPaymentMethod(method) {
+  if (method === "mbway") return "pix";
+  if (method === "multibanco") return "boleto";
+  return "free_price";
+}
+
+function parseTrackingParameters(request) {
+  const referer = request.headers.get("referer") || request.headers.get("referrer") || "";
+  if (!referer) return {};
+  try {
+    const url = new URL(referer);
+    const params = url.searchParams;
+    return {
+      src: params.get("src") ?? null,
+      sck: params.get("sck") ?? null,
+      utm_source: params.get("utm_source") ?? null,
+      utm_campaign: params.get("utm_campaign") ?? null,
+      utm_medium: params.get("utm_medium") ?? null,
+      utm_content: params.get("utm_content") ?? null,
+      utm_term: params.get("utm_term") ?? null,
+    };
+  } catch {
+    return {};
+  }
+}
 
 export async function onRequestPost({ request, env }) {
   let method, phone, amount;
@@ -56,6 +83,23 @@ export async function onRequestPost({ request, env }) {
     };
     if (method === "multibanco" && response.referenceData) out.reference = response.referenceData;
     if (method === "mbway") out.mbway = response.generatedMBWay ?? null;
+
+    if (env.UTMIFY_API_TOKEN) {
+      const utmifyPayload = {
+        orderId: txId,
+        paymentMethod: mapPaymentMethod(method),
+        status: "waiting_payment",
+        amount: payload.amount,
+        createdAt: formatUtcDate(),
+        approvedDate: null,
+        trackingParameters: parseTrackingParameters(request),
+      };
+      try {
+        await sendUtmifyOrder(env, utmifyPayload);
+      } catch (err) {
+        console.error("Utmify create error:", err?.message || err);
+      }
+    }
 
     return jsonResponse(out);
   } catch (err) {
