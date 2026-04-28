@@ -18,7 +18,10 @@
       ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{};ttq._i[e]=[];ttq._i[e]._u=i;ttq._t=ttq._t||{};ttq._t[e]=+new Date;var a=d.createElement("script");a.async=!0;a.src=i+"?sdkid="+e+"&lib="+t;var s=d.getElementsByTagName("script")[0];s.parentNode.insertBefore(a,s);};
       ttq.load("D7L8P13C77UAO8VTANEG");
       ttq.page();
-      ttq.track('Purchase',{value:20.19,currency:'EUR'});
+      const successParams = new URLSearchParams(location.search);
+      const rawValue = successParams.get('amount');
+      const value = parseFloat((rawValue || "20.19").replace(',', '.')) || 20.19;
+      ttq.track('CompletePayment', { value, currency: 'EUR' });
     }(window, document, 'ttq');
     const upsellNext = {
       ups1: '/ups1/',

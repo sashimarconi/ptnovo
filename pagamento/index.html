@@ -217,7 +217,7 @@
         const data = await r.json();
         if (data.status === 'COMPLETED') {
           clearInterval(pollTimer);
-          window.location.href = './sucesso.html?id=' + encodeURIComponent(currentTx) + '&next=' + encodeURIComponent(nextPage);
+          window.location.href = './sucesso.html?id=' + encodeURIComponent(currentTx) + '&next=' + encodeURIComponent(nextPage) + '&amount=' + encodeURIComponent(amount.toFixed(2));
         } else if (data.status === 'DECLINED') {
           clearInterval(pollTimer);
           $('mbway-status') && ($('mbway-status').textContent = 'Pagamento recusado. Tente novamente.');
